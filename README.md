@@ -1,18 +1,29 @@
-# asteroids
-Asteroids-type game originally coded in Python. Later ported to JavaScript, making it playable in a web browser
+# Asteroids
 
-I first wrote this game in Python, using the standard TKinter graphics library. It was one of many small projects I undertook while teaching myself Python. The code is 100% my own, having figured out how a game-loop would work simply by thinking it through in my head. Also, no AI was used to assist me in writing it.
+A simple Asteroids-style game originally written in **Python (Tkinter)** and later ported to **JavaScript (HTML/CSS)** to run directly in a web browser.
 
-The first iteration of this project used Python's object-oriented fuctionalities. However, the overall performance was quite poor. I gained a significant increase in performance by using dictionaries instead of objects, and making the class methods standard functions. As such, the code is now completely procedural, and runs a whole lot better than it did before. 
+---
 
-Later, in order to gain a better grasp of JavaScript, I ported the code to JavaScript with the relevant HTML and CSS files required to get it running in a webbrowser. This version can be run simply by double-clicking the index.html file.
+## 📝 About
 
-The controls of both versions are as follows:
+I created this project as part of teaching myself programming from scratch.  
+It began as an object-oriented Python implementation using Tkinter. After discovering performance bottlenecks, I refactored it into a purely procedural design using dictionaries and standalone functions — which significantly improved performance.
 
-W: move ship forwards
-S: move ship backwards
-A: move ship left
-D: move ship right
-Left arrow: turn ship left
-Right arrow: turn ship right
-Up arrow: fire gun
+Later, to strengthen my JavaScript skills, I ported the game to a browser version using HTML, CSS, and vanilla JavaScript.
+
+---
+
+## 🎮 How to Play
+
+**Controls (both versions)**  
+- **W / S / A / D** — Move the ship  
+- **Left / Right arrows** — Rotate the ship  
+- **Up arrow** — Fire
+
+---
+
+## 💻 Running the Game
+
+**Python version**
+```bash
+python asteroids.py

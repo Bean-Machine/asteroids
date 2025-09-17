@@ -25,7 +25,7 @@ Later, to strengthen my JavaScript skills, I ported the game to a browser versio
 ## 💻 Running the Game
 
 **Python version**
-- Open the `main.py` file in [PyCharm](https://www.jetbrains.com/pycharm/)  
+- Open the `python-version/main.py` file in [PyCharm](https://www.jetbrains.com/pycharm/)  
 - Click **Run ▶** to start the game  
 - ✅ Uses only Python’s standard library (`tkinter`, `math`, `random`) — no external installations needed
 

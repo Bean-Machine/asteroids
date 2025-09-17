@@ -1,0 +1,15 @@
+body
+{
+	margin: 0;
+	height: 100vh;
+	background: linear-gradient(to bottom, #002211, #003344);
+}
+
+canvas
+{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	border: 2px solid white;
+}

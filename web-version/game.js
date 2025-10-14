@@ -23,6 +23,9 @@ const shipBackwardAccel = 0.03;
 const shipDecel = 0.01;
 const shipJinkAccel = 0.03;
 const shipJinkDecel = 0.01;
+const shipBoostDecel = 0.05;
+const shipMaxBoostSpeed = 3;
+const boostRechargeTime = 60;
 
 const gunReloadTime = 20;
 const bulletRadius = 3;
@@ -55,6 +58,8 @@ let shipWingAngleR = shipAngle + shipWingAngle;     // the angle of the ship's r
 let shipWingAngleL = shipAngle - shipWingAngle;     // the angle of the ship's left wing relative to its front angle
 let shipSpeed = 0;
 let shipJinkSpeed = 0;
+let shipBoostSpeed = 0;
+let boostRecharge = 0;
 let shipDestroyed = false;
 let gunCounter = 0;
 let impactCounter = 0;           // for time between playing the sfxImpact sound
@@ -83,6 +88,7 @@ document.addEventListener ("keydown", e => keys[e.key] = true);
 document.addEventListener ("keyup", e => keys[e.key] = false);
 
 
+// Game functions
 function getDistance (x1, y1, x2, y2)
 {
     let xDelta = x2 - x1;
@@ -192,14 +198,14 @@ function mainGameLoop()
 	// Between levels sequence (while counting down, none of the rest of the game loop is executed)
     if (betweenLevelsCountdown > 0)
     {
-    	if (betweenLevelsCountdown == countdownLength)
+    	if (betweenLevelsCountdown === countdownLength)
         {
 			// Clear screen
 			clearScreen();
 			displayScore();
 			displayGameMessage ("ARENA CLEARED!");
 		}
-		else if (betweenLevelsCountdown == countdownLength / 2)
+		else if (betweenLevelsCountdown === countdownLength / 2)
         {
 			// Clear screen
 			clearScreen();
@@ -243,14 +249,14 @@ function mainGameLoop()
     // Countdown sequence after losing a life
     else if (lifeLostCountdown > 0)
     {
-    	if (lifeLostCountdown == countdownLength)
+    	if (lifeLostCountdown === countdownLength)
         {
 			// Clear screen
 			clearScreen();
 			displayScore();
 			displayGameMessage ("YOU DIED!");
 		}
-		else if (lifeLostCountdown == countdownLength / 2)
+		else if (lifeLostCountdown === countdownLength / 2)
         {
         	if (gameOver)
         	{
@@ -274,6 +280,7 @@ function mainGameLoop()
 	if (initialisePlayfield)
 	{
         shipCenter.x = 300, shipCenter.y = 300, shipAngle = pi/2, shipSpeed = 0, shipJinkSpeed = 0;
+        shipBoostSpeed = 0, boostRecharge = 0; 
 
         // lists for bullet, asteroid and explosion dictionaries
         bullets = [];
@@ -301,24 +308,49 @@ function mainGameLoop()
         initialisePlayfield = false;
     }
 
-	// Process key inputs
-    if (keys["ArrowLeft"])
+    // Process joypad and keyboard inputs
+    const gp = navigator.getGamepads()?.[0];
+    const dpadUp = gp?.buttons?.[12]?.pressed;
+    const dpadDown = gp?.buttons?.[13]?.pressed;
+    const dpadLeft = gp?.buttons?.[14]?.pressed;
+    const dpadRight = gp?.buttons?.[15]?.pressed;
+    const triggerL = gp?.buttons?.[6]?.pressed;
+    const triggerR = gp?.buttons?.[7]?.pressed;
+    const buttonL = gp?.buttons?.[4]?.pressed;
+    const buttonR = gp?.buttons?.[5]?.pressed;
+    const button1 = gp?.buttons?.[2]?.pressed;
+    const button2 = gp?.buttons?.[0]?.pressed;
+    const button3 = gp?.buttons?.[1]?.pressed;
+    const button4 = gp?.buttons?.[3]?.pressed;
+
+    const turnLeft = dpadLeft || keys["ArrowLeft"];
+    const turnRight = dpadRight || keys["ArrowRight"];
+    const moveForward = dpadUp || keys["e"];
+    const moveBack = dpadDown || keys["d"];
+    const moveLeft = triggerL || keys["s"];
+    const moveRight = triggerR || keys["f"];
+    const boostLeft = button1 || keys["a"];
+    const boostRight = button3 || keys[" "];
+    const shoot = button4 || keys["ArrowUp"];
+
+	// Apply inputs
+    if (turnLeft)
         shipAngle += shipTurnSpeed;
-    if (keys["ArrowRight"])
+    if (turnRight)
         shipAngle -= shipTurnSpeed;
-    if (keys["w"])
+    if (moveForward)
     {
         shipSpeed += shipForwardAccel;
         if (shipSpeed > shipMaxForwardSpeed)
             shipSpeed = shipMaxForwardSpeed;
     }
-    if (keys["s"])
+    if (moveBack)
     {
         shipSpeed -= shipBackwardAccel;
         if (shipSpeed < -shipMaxBackwardSpeed)
             shipSpeed = -shipMaxBackwardSpeed;
     }
-    if (! (keys["w"] || keys["s"]))
+    if (! (moveForward || moveBack))
     {
         if (shipSpeed > 0)
             shipSpeed -= shipDecel;
@@ -327,19 +359,19 @@ function mainGameLoop()
         if (Math.abs (shipSpeed) < 0.001)
             shipSpeed = 0;
     }
-	if (keys["a"])
+	if (moveLeft)
     {
         shipJinkSpeed -= shipJinkAccel;
         if (shipJinkSpeed < -shipMaxJinkSpeed)
             shipJinkSpeed = -shipMaxJinkSpeed;
     }
-    if (keys["d"])
+    if (moveRight)
     {
         shipJinkSpeed += shipJinkAccel;
         if (shipJinkSpeed > shipMaxJinkSpeed)
             shipJinkSpeed = shipMaxJinkSpeed;
     }
-    if (! (keys["a"] || keys["d"]))
+    if (! (moveLeft || moveRight))
     {
         if (shipJinkSpeed > 0)
             shipJinkSpeed -= shipJinkDecel;
@@ -348,10 +380,30 @@ function mainGameLoop()
         if (Math.abs (shipJinkSpeed) < 0.001)
             shipJinkSpeed = 0;
     }
-    if (keys["ArrowUp"])
+    if (boostLeft)
     {
-        if (! upKeyLast)               // allows for rapid fire by repeatedly mashing the fire button
-            gunCounter = 0;
+        if (boostRecharge <= 0)
+        {
+            boostRecharge = boostRechargeTime;
+            shipBoostSpeed = -shipMaxBoostSpeed;
+            if (shipJinkSpeed > 0)
+                shipJinkSpeed = -shipJinkSpeed;
+        }
+    }
+    else if (boostRight)
+    {
+        if (boostRecharge <= 0)
+        {
+            boostRecharge = boostRechargeTime;
+            shipBoostSpeed = shipMaxBoostSpeed;
+            if (shipJinkSpeed < 0)
+                shipJinkSpeed = -shipJinkSpeed;
+        }
+    }
+    if (shoot)
+    {
+        // if (! upKeyLast)               // allows for rapid fire by repeatedly mashing the fire button
+        //     gunCounter = 0;
         if (gunCounter <= 0)
         {
             newBullet (shipCenter["x"], shipCenter["y"], shipAngle, bulletLifeSpan);
@@ -404,8 +456,8 @@ function mainGameLoop()
   	// Move ship center
     shipCenter.x += shipSpeed * Math.cos (shipAngle);
     shipCenter.y -= shipSpeed * Math.sin (shipAngle);
-    shipCenter.x += shipJinkSpeed * Math.cos (shipAngle - (pi/2));
-    shipCenter.y -= shipJinkSpeed * Math.sin (shipAngle - (pi/2));
+    shipCenter.x += (shipJinkSpeed + shipBoostSpeed) * Math.cos (shipAngle - (pi/2));
+    shipCenter.y -= (shipJinkSpeed + shipBoostSpeed) * Math.sin (shipAngle - (pi/2));
     if (shipCenter.x - shipRadius < arenaMargin)
         shipCenter.x = arenaMargin + shipRadius;
     else if (shipCenter.x + shipRadius > arenaSize - arenaMargin)
@@ -414,6 +466,14 @@ function mainGameLoop()
         shipCenter.y = arenaMargin + shipRadius;
     else if (shipCenter.y + shipRadius > arenaSize - arenaMargin)
         shipCenter.y = arenaSize - arenaMargin - shipRadius;
+
+    // Decrease boost speed and boost recharge
+    if (shipBoostSpeed < 0)
+        shipBoostSpeed += shipBoostDecel;
+    else if (shipBoostSpeed > 0)
+        shipBoostSpeed -= shipBoostDecel;
+    if (boostRecharge > 0)
+        boostRecharge -= 1
   	
   	// Recalculate ship's points
     shipWingAngleR = shipAngle - shipWingAngle;
@@ -550,7 +610,7 @@ function mainGameLoop()
     asteroids = asteroids.filter (asteroid => asteroid.lifeBar > 0);
     
     // Set between levels countdown if all asteroids and explosions have been destroyed
-    if (asteroids.length == 0 && explosions.length == 0)
+    if (asteroids.length === 0 && explosions.length === 0)
     {
     	betweenLevelsCountdown = countdownLength;
     	bullets = [], asteroids = [], explosions = [];

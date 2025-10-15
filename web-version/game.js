@@ -123,16 +123,16 @@ function asteroidCollision (asteroid1, asteroid2)
 
 function getAsteroidColor (asteroid)
 {
-  let n = Math.floor (asteroid.lifeBar * 200 / 10);
-  if (n < 0)
-  	n = 0;
+    let n = Math.floor (asteroid.lifeBar * 200 / 10);
+    if (n < 0)
+        n = 0;
 
-  // Convert to 2-digit hex
-  let green = n.toString (16);
-  if (n < 16)
-    green = "0" + green;
+    // Convert to 2-digit hex
+    let green = n.toString (16);
+    if (n < 16)
+        green = "0" + green;
 
-  return "#ff" + green + "00";
+    return "#ff" + green + "00";
 }
 
 function moveAsteroid (asteroid)
@@ -402,8 +402,8 @@ function mainGameLoop()
     }
     if (shoot)
     {
-        // if (! upKeyLast)               // allows for rapid fire by repeatedly mashing the fire button
-        //     gunCounter = 0;
+        if (! upKeyLast)               // allows for rapid fire by repeatedly mashing the fire button
+            gunCounter = 0;
         if (gunCounter <= 0)
         {
             newBullet (shipCenter["x"], shipCenter["y"], shipAngle, bulletLifeSpan);
@@ -421,8 +421,8 @@ function mainGameLoop()
         }
         else if (gunCounter > 0)
             gunCounter -= 1;
-    	upKeyLast = keys["ArrowUp"];
     }
+    upKeyLast = keys["ArrowUp"];
 
 	// Clear screen
   	clearScreen();
